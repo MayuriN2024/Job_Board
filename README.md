@@ -23,7 +23,7 @@ JobBoard is a modern, production-level career platform designed for Job Seekers 
 ## Folder Structure
 
 ```
-CareerOrbit-AI/
+JobBoard/
 ├── frontend/          # React frontend
 ├── backend/           # Spring Boot backend
 ├── .github/           # GitHub Actions workflows

@@ -1,4 +1,4 @@
-name: CareerOrbit AI CI/CD
+name: JobBoard CI/CD
 
 on:
   push:
