@@ -1,0 +1,11 @@
+spring.application.name=careerorbit-ai
+spring.datasource.url=jdbc:postgresql://${DATABASE_URL:localhost:5432/careerorbit}
+spring.datasource.username=${DATABASE_USER:postgres}
+spring.datasource.password=${DATABASE_PASSWORD:postgres}
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# JWT Configuration
+careerorbit.jwt.secret=${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+careerorbit.jwt.expiration=86400000
