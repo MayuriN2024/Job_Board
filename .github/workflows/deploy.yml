@@ -15,12 +15,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Build Frontend
         run: |
           cd frontend
-          npm install
+          npm install --legacy-peer-deps
           npm run build
 
       - name: Deploy Frontend to Vercel
