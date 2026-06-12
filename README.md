@@ -1,6 +1,6 @@
-# CareerOrbit AI
+# JobBoard
 
-CareerOrbit AI is a modern, production-level career platform designed for Job Seekers and Recruiters. It features AI-inspired job matching, application tracking, and comprehensive recruiter management.
+JobBoard is a modern, production-level career platform designed for Job Seekers and Recruiters. It features AI-inspired job matching, application tracking, and comprehensive recruiter management.
 
 ## Tech Stack
 
