@@ -28,6 +28,7 @@ jobs:
           npm run build
 
       - name: Deploy Frontend to Vercel
+        # Triggers production deployment to Vercel using the configured secrets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: amondnet/vercel-action@v25
         with:
