@@ -1,9 +1,131 @@
 import React, { useState, useRef } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { User, MapPin, Mail, Briefcase, Save, FileText, Camera, Download, Upload, Plus, X, ClipboardList, PenLine } from 'lucide-react';
+import { User, MapPin, Mail, Briefcase, Save, FileText, Camera, Download, Upload, Plus, X, ClipboardList, PenLine, Code2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getJobById } from '../data/jobs';
 import { INDIAN_LOCATIONS } from '../data/locations';
+
+const getSkillSlug = (skillName) => {
+  const name = skillName.toLowerCase().trim();
+  const mapping = {
+    'javascript': 'javascript',
+    'js': 'javascript',
+    'typescript': 'typescript',
+    'ts': 'typescript',
+    'react': 'react',
+    'react.js': 'react',
+    'reactjs': 'react',
+    'node': 'nodedotjs',
+    'node.js': 'nodedotjs',
+    'nodejs': 'nodedotjs',
+    'python': 'python',
+    'py': 'python',
+    'java': 'openjdk',
+    'html': 'html5',
+    'html5': 'html5',
+    'css': 'css3',
+    'css3': 'css3',
+    'docker': 'docker',
+    'git': 'git',
+    'aws': 'amazonwebservices',
+    'amazon web services': 'amazonwebservices',
+    'figma': 'figma',
+    'spring boot': 'springboot',
+    'springboot': 'springboot',
+    'c++': 'cplusplus',
+    'cpp': 'cplusplus',
+    'c#': 'csharp',
+    'csharp': 'csharp',
+    'ruby': 'ruby',
+    'rails': 'rubyonrails',
+    'ruby on rails': 'rubyonrails',
+    'php': 'php',
+    'mysql': 'mysql',
+    'postgresql': 'postgresql',
+    'postgres': 'postgresql',
+    'mongodb': 'mongodb',
+    'mongo': 'mongodb',
+    'angular': 'angular',
+    'vue': 'vuedotjs',
+    'vue.js': 'vuedotjs',
+    'vuejs': 'vuedotjs',
+    'tailwind': 'tailwindcss',
+    'tailwindcss': 'tailwindcss',
+    'flutter': 'flutter',
+    'kotlin': 'kotlin',
+    'swift': 'swift',
+    'rust': 'rust',
+    'go': 'go',
+    'golang': 'go',
+    'kubernetes': 'kubernetes',
+    'k8s': 'kubernetes',
+    'next.js': 'nextdotjs',
+    'nextjs': 'nextdotjs',
+    'nuxt.js': 'nuxtdotjs',
+    'nuxt': 'nuxtdotjs',
+    'nest.js': 'nestjs',
+    'nestjs': 'nestjs',
+    'express': 'express',
+    'express.js': 'express',
+    'graphql': 'graphql',
+    'redux': 'redux',
+    'firebase': 'firebase',
+    'sass': 'sass',
+    'scss': 'sass',
+    'webpack': 'webpack',
+    'vite': 'vite',
+    'linux': 'linux',
+    'ubuntu': 'ubuntu',
+    'nginx': 'nginx',
+    'apache': 'apache',
+    'jira': 'jira',
+    'confluence': 'confluence',
+    'trello': 'trello',
+    'slack': 'slack',
+    'zoom': 'zoom',
+    'excel': 'microsoftexcel',
+    'word': 'microsoftword',
+    'powerpoint': 'microsoftpowerpoint',
+    'photoshop': 'adobephotoshop',
+    'illustrator': 'adobeillustrator',
+    'premiere': 'adobepremierepro',
+    'after effects': 'adobeaftereffects',
+  };
+  
+  return mapping[name] || null;
+};
+
+const SkillBadge = ({ skill, onRemove }) => {
+  const slug = getSkillSlug(skill);
+  const [imageError, setImageError] = useState(false);
+
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:scale-105"
+      style={{ backgroundColor: 'rgba(109,40,217,0.08)', color: '#6d28d9', border: '1px solid rgba(109,40,217,0.15)' }}
+    >
+      {slug && !imageError ? (
+        <img
+          src={`https://cdn.simpleicons.org/${slug}`}
+          alt={skill}
+          className="w-4 h-4 object-contain"
+          onError={() => setImageError(true)}
+        />
+      ) : (
+        <Code2 size={14} className="text-primary-500" />
+      )}
+      <span>{skill}</span>
+      {onRemove && (
+        <button
+          onClick={onRemove}
+          className="hover:bg-primary-200 rounded-full p-0.5 transition-colors cursor-pointer"
+        >
+          <X size={12} />
+        </button>
+      )}
+    </span>
+  );
+};
 
 const Profile = () => {
   const { user, isAuthenticated, updateProfile, getApplications, getApplicationCount } = useAuth();
@@ -297,19 +419,7 @@ const Profile = () => {
               <div className="flex flex-wrap gap-2 mb-4">
                 {skills.length > 0 ? (
                   skills.map((skill) => (
-                    <span
-                      key={skill}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium"
-                      style={{ backgroundColor: 'rgba(109,40,217,0.08)', color: '#6d28d9' }}
-                    >
-                      {skill}
-                      <button
-                        onClick={() => removeSkill(skill)}
-                        className="hover:bg-primary-200 rounded-full p-0.5 transition-colors cursor-pointer"
-                      >
-                        <X size={12} />
-                      </button>
-                    </span>
+                    <SkillBadge key={skill} skill={skill} onRemove={() => removeSkill(skill)} />
                   ))
                 ) : (
                   <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No skills added yet.</p>

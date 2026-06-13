@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { MapPin, Briefcase, Clock, Bookmark, Share2, CheckCircle, ExternalLink } from 'lucide-react';
 import { getJobById } from '../data/jobs';
 import { useSavedJobs } from '../context/SavedJobsContext';
@@ -16,6 +16,8 @@ const JobDetails = () => {
   const { isSaved, toggleSave } = useSavedJobs();
   const { isAuthenticated, hasApplied } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   const [showShare, setShowShare] = useState(false);
   const [showApply, setShowApply] = useState(false);
@@ -46,6 +48,11 @@ const JobDetails = () => {
   const applied = hasApplied(job.id);
 
   const handleBookmarkToggle = () => {
+    if (!isAuthenticated) {
+      showToast('Please log in to save jobs! 🔐', 'warning');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
     toggleSave(job.id);
     if (!saved) {
       showToast('Job added to bookmarks! 📌', 'success');

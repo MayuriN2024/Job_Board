@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Rocket, User, Briefcase, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -12,24 +12,39 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [location, setLocation] = useState('');
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const { isDark } = useTheme();
   const navigate = useNavigate();
+  const locationState = useLocation();
+
+  const from = locationState.state?.from || '/profile';
 
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const result = register({ name, email, password, role, location });
     if (result.success) {
-      navigate('/profile');
+      navigate(from, { replace: true });
     } else {
       setError(result.error);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-28 pb-10 px-4" style={{ backgroundColor: 'var(--bg-page)' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center pt-28 pb-10 px-4" style={{ backgroundColor: 'var(--bg-page)' }}>
+      <div className="max-w-xl w-full mb-4">
+        <Link to="/" className="inline-flex items-center text-primary-500 font-bold hover:gap-2 transition-all">
+          <span className="mr-2">←</span> Back to Home
+        </Link>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -162,6 +177,7 @@ const Register = () => {
               minLength={8}
               className="w-full px-4 py-3 rounded-xl outline-none focus:border-primary-500 transition-all font-medium"
               style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+              autoComplete="new-password"
               required
             />
           </div>

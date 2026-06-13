@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { MapPin, Briefcase, Clock, Bookmark, Share2, GitCompareArrows } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useSavedJobs } from '../context/SavedJobsContext';
 import { useCompare } from '../context/CompareContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import ShareModal from './ShareModal';
 import ApplyModal from './ApplyModal';
@@ -13,6 +14,9 @@ const JobCard = ({ job }) => {
   const { isSaved, toggleSave } = useSavedJobs();
   const { isComparing, toggleCompare, compareCount } = useCompare();
   const { showToast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const saved = isSaved(job.id);
   const comparing = isComparing(job.id);
   
@@ -20,6 +24,11 @@ const JobCard = ({ job }) => {
   const [showApply, setShowApply] = useState(false);
 
   const handleBookmarkClick = () => {
+    if (!isAuthenticated) {
+      showToast('Please log in to save jobs! 🔐', 'warning');
+      navigate('/login', { state: { from: location.pathname } });
+      return;
+    }
     toggleSave(job.id);
     if (!saved) {
       showToast('Job added to bookmarks! 📌', 'success');

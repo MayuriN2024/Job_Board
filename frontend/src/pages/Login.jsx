@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Rocket, Mail, Lock, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -11,8 +11,17 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from || '/profile';
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   useEffect(() => {
     const savedEmail = localStorage.getItem(REMEMBER_EMAIL_KEY);
@@ -31,14 +40,20 @@ const Login = () => {
       } else {
         localStorage.removeItem(REMEMBER_EMAIL_KEY);
       }
-      navigate('/profile');
+      navigate(from, { replace: true });
     } else {
       setError(result.error);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center pt-20 px-4" style={{ backgroundColor: 'var(--bg-page)' }}>
+    <div className="min-h-screen flex flex-col items-center justify-center pt-20 px-4" style={{ backgroundColor: 'var(--bg-page)' }}>
+      <div className="max-w-md w-full mb-4">
+        <Link to="/" className="inline-flex items-center text-primary-500 font-bold hover:gap-2 transition-all">
+          <span className="mr-2">←</span> Back to Home
+        </Link>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -84,6 +99,7 @@ const Login = () => {
                 placeholder="••••••••"
                 className="w-full pl-12 pr-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary-200 transition-all font-medium"
                 style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                autoComplete="new-password"
                 required
               />
             </div>

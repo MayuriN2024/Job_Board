@@ -17,6 +17,7 @@ import ToastContainer from './components/ToastContainer';
 import ScrollToTop from './components/ScrollToTop';
 import { useAuth } from './context/AuthContext';
 import { useCompare } from './context/CompareContext';
+import { useToast } from './context/ToastContext';
 import { Link } from 'react-router-dom';
 import { X, GitCompareArrows } from 'lucide-react';
 import { getJobById } from './data/jobs';
@@ -24,6 +25,7 @@ import { getJobById } from './data/jobs';
 function App() {
   const { loginSuccess, user } = useAuth();
   const { compareIds, removeFromCompare, clearCompare, compareCount } = useCompare();
+  const { showToast } = useToast();
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -53,7 +55,7 @@ function App() {
       {compareCount > 0 && (
         <div className="compare-bar">
           <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 overflow-x-auto">
+            <div className="flex items-center gap-3 overflow-x-auto min-w-0 flex-1">
               <GitCompareArrows size={18} className="text-primary-500 shrink-0" />
               <span className="text-sm font-bold shrink-0" style={{ color: 'var(--text-primary)' }}>
                 {compareCount} job{compareCount > 1 ? 's' : ''} selected
@@ -65,7 +67,7 @@ function App() {
                   return (
                     <span
                       key={id}
-                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium"
+                      className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium shrink-0"
                       style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)' }}
                     >
                       {job.title.length > 20 ? job.title.slice(0, 20) + '…' : job.title}
@@ -83,7 +85,13 @@ function App() {
               </button>
               <Link
                 to="/compare"
-                className={`btn-primary py-2 px-4 text-sm cursor-pointer ${compareCount < 2 ? 'opacity-50 pointer-events-none' : ''}`}
+                onClick={(e) => {
+                  if (compareCount < 2) {
+                    e.preventDefault();
+                    showToast('Please select at least 2 jobs to compare! 🔄', 'info');
+                  }
+                }}
+                className={`btn-primary py-2 px-4 text-sm cursor-pointer ${compareCount < 2 ? 'opacity-60' : ''}`}
               >
                 Compare Now
               </Link>

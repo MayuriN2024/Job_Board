@@ -54,6 +54,7 @@ export const AuthProvider = ({ children }) => {
     const accounts = loadAccounts();
     const account = accounts.find((a) => a.email === email && a.password === password);
     if (account) {
+      localStorage.setItem(SESSION_KEY, JSON.stringify(account));
       setUser(account);
       setLoginSuccess(true);
       setTimeout(() => setLoginSuccess(false), 4000);
@@ -81,6 +82,7 @@ export const AuthProvider = ({ children }) => {
       skills: [],
     };
     localStorage.setItem(ACCOUNTS_KEY, JSON.stringify([...accounts, newUser]));
+    localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
     setUser(newUser);
     setLoginSuccess(true);
     setTimeout(() => setLoginSuccess(false), 4000);

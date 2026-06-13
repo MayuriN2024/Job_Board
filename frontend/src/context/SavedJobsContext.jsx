@@ -1,30 +1,47 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const SavedJobsContext = createContext(null);
 
-const STORAGE_KEY = 'jobboard_saved_jobs';
-
 export const SavedJobsProvider = ({ children }) => {
-  const [savedJobIds, setSavedJobIds] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { user } = useAuth();
+  const [savedJobIds, setSavedJobIds] = useState([]);
 
+  // Load from localStorage whenever user changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(savedJobIds));
-  }, [savedJobIds]);
+    if (user) {
+      const STORAGE_KEY = `jobboard_saved_jobs_${user.email}`;
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        setSavedJobIds(stored ? JSON.parse(stored) : []);
+      } catch {
+        setSavedJobIds([]);
+      }
+    } else {
+      setSavedJobIds([]);
+    }
+  }, [user]);
 
-  const isSaved = (jobId) => savedJobIds.includes(Number(jobId));
+  // Save to localStorage when savedJobIds changes
+  useEffect(() => {
+    if (user) {
+      const STORAGE_KEY = `jobboard_saved_jobs_${user.email}`;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedJobIds));
+    }
+  }, [savedJobIds, user]);
+
+  const isSaved = (jobId) => {
+    if (!user) return false;
+    return savedJobIds.includes(Number(jobId));
+  };
 
   const toggleSave = (jobId) => {
+    if (!user) return false;
     const id = Number(jobId);
     setSavedJobIds((prev) =>
       prev.includes(id) ? prev.filter((savedId) => savedId !== id) : [...prev, id]
     );
+    return true;
   };
 
   return (
