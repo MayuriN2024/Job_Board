@@ -134,3 +134,22 @@ To ensure a seamless user experience without requiring a complex backend setup, 
 
 * **Theme Not Applying**: Make sure that the browser has Javascript enabled. CSS styling relies on the `dark` class residing on the `<html>` root, changing styling values dynamically.
 * **Storage Reset**: To clear mock data or refresh authentication records, open the browser developer tools (F12) -> Application -> Local Storage -> Click "Clear All" and refresh the page.
+
+---
+
+## 5. CI/CD & Deployment Workflow
+
+JobBoard uses a streamlined continuous integration and continuous deployment strategy:
+
+### Continuous Integration (CI) - GitHub Actions
+The workflow defined in `.github/workflows/deploy.yml` acts as the code-quality gatekeeper:
+* **Trigger Conditions**: Triggers on every push or pull request to the `main` branch.
+* **Process**: Spins up a clean Linux runner (`ubuntu-latest`), sets up Node.js 20, installs all dependencies (`npm install --legacy-peer-deps`), and verifies that the React app compiles cleanly (`npm run build`).
+* **Goal**: Guarantees that no broken/uncompilable code gets merged into the repository.
+
+### Continuous Deployment (CD) - Vercel Native Integration
+Deployment is decoupled from GitHub Actions to leverage Vercel's optimized deployment engine:
+* **Automatic Builds**: The project is directly linked to Vercel via the official Vercel-GitHub integration.
+* **Execution**: Upon a push to the `main` branch, Vercel automatically detects the change, runs the production build, and deploys it to the live domain.
+* **Status Updates**: Vercel reports the deployment status check directly back to GitHub commits, showing a green checkmark upon completion.
+
