@@ -22,21 +22,38 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     public AuthResponse register(RegisterRequest request) {
+        if (repository.findByEmail(request.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already exists");
+        }
+
+        String defaultTitle = request.getRole() == User.Role.ROLE_RECRUITER ? "Recruiter" : "Job Seeker";
+
         var user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .role(request.getRole() != null ? request.getRole() : User.Role.ROLE_USER)
+                .location(request.getLocation() != null ? request.getLocation() : "")
+                .title(defaultTitle)
+                .bio("")
+                .profilePic("")
+                .resumeName("")
+                .resumeData("")
+                .skills("") // Empty comma-separated skills
                 .build();
+        
         repository.save(user);
+        
         var jwtToken = jwtService.generateToken(org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
                 .roles(user.getRole().name().replace("ROLE_", ""))
                 .build());
+                
         return AuthResponse.builder()
                 .token(jwtToken)
                 .message("User registered successfully")
+                .user(user)
                 .build();
     }
 
@@ -48,15 +65,18 @@ public class AuthService {
                 )
         );
         var user = repository.findByEmail(request.getEmail())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("User not found"));
+                
         var jwtToken = jwtService.generateToken(org.springframework.security.core.userdetails.User.builder()
                 .username(user.getEmail())
                 .password(user.getPassword())
                 .roles(user.getRole().name().replace("ROLE_", ""))
                 .build());
+                
         return AuthResponse.builder()
                 .token(jwtToken)
                 .message("Login successful")
+                .user(user)
                 .build();
     }
 }

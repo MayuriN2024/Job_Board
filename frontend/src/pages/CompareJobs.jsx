@@ -2,11 +2,15 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { X, MapPin, Briefcase, DollarSign, Clock, ArrowRight } from 'lucide-react';
 import { useCompare } from '../context/CompareContext';
-import { getJobById } from '../data/jobs';
 
 const CompareJobs = () => {
-  const { compareIds, removeFromCompare, clearCompare } = useCompare();
-  const jobs = compareIds.map((id) => getJobById(id)).filter(Boolean);
+  const { compareIds, compareJobs, removeFromCompare, clearCompare } = useCompare();
+  const jobs = compareJobs.filter(Boolean).map((job) => ({
+    ...job,
+    tags: job.tags && typeof job.tags === 'string'
+      ? job.tags.split(',').map((t) => t.trim()).filter(Boolean)
+      : (job.tags || []),
+  }));
 
   return (
     <div className="min-h-screen pt-28 pb-20" style={{ backgroundColor: 'var(--bg-page)' }}>

@@ -3,12 +3,18 @@ import { Link } from 'react-router-dom';
 import { Bookmark } from 'lucide-react';
 import JobCard from '../components/JobCard';
 import { useSavedJobs } from '../context/SavedJobsContext';
-import { JOBS } from '../data/jobs';
-import { getAllJobs } from '../data/vacancies';
 
 const SavedJobs = () => {
-  const { savedJobIds } = useSavedJobs();
-  const savedJobs = getAllJobs(JOBS).filter((job) => savedJobIds.includes(job.id));
+  const { savedJobIds, loading } = useSavedJobs();
+
+  // The savedJobsContext now uses the backend to fetch jobs,
+  // but we need the full job objects. We'll get them from the backend via the toggleSave response.
+  // For now, SavedJobsContext exposes savedJobIds (numbers), and we will refactor context to expose full jobs.
+
+  // Access the full saved job objects from context
+  const { savedJobs } = useSavedJobs();
+
+  const displayJobs = savedJobs || [];
 
   return (
     <div className="min-h-screen pt-28 pb-20" style={{ backgroundColor: 'var(--bg-page)' }}>
@@ -20,10 +26,19 @@ const SavedJobs = () => {
         <h1 className="text-4xl font-extrabold mb-2" style={{ color: 'var(--text-primary)' }}>Saved Jobs</h1>
         <p className="mb-10" style={{ color: 'var(--text-muted)' }}>Jobs you bookmarked for later.</p>
 
-        {savedJobs.length > 0 ? (
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : displayJobs.length > 0 ? (
           <div className="space-y-6">
-            {savedJobs.map((job) => (
-              <JobCard key={job.id} job={job} />
+            {displayJobs.map((job) => (
+              <JobCard key={job.id} job={{
+                ...job,
+                tags: job.tags && typeof job.tags === 'string'
+                  ? job.tags.split(',').map((t) => t.trim()).filter(Boolean)
+                  : (job.tags || []),
+              }} />
             ))}
           </div>
         ) : (

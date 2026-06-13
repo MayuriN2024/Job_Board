@@ -1,9 +1,15 @@
 package com.careerorbit.controller;
 
 import com.careerorbit.entity.Job;
+import com.careerorbit.entity.Notification;
+import com.careerorbit.entity.User;
+import com.careerorbit.repository.NotificationRepository;
+import com.careerorbit.repository.UserRepository;
 import com.careerorbit.service.JobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +20,8 @@ import java.util.List;
 public class JobController {
 
     private final JobService service;
+    private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
 
     @GetMapping
     public ResponseEntity<List<Job>> getAllJobs() {
@@ -28,17 +36,64 @@ public class JobController {
     }
 
     @PostMapping
-    public ResponseEntity<Job> createJob(@RequestBody Job job) {
-        return ResponseEntity.ok(service.createJob(job));
+    public ResponseEntity<?> createJob(@RequestBody Job job, @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body("Unauthorized: Please log in first.");
+        }
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        if (user.getRole() != User.Role.ROLE_RECRUITER) {
+            return ResponseEntity.status(403).body("Forbidden: Only recruiters can add jobs.");
+        }
+        job.setRecruiter(user);
+        Job createdJob = service.createJob(job);
+
+        // Notify all job seekers
+        List<User> seekers = userRepository.findAllByRole(User.Role.ROLE_USER);
+        for (User seeker : seekers) {
+            notificationRepository.save(Notification.builder()
+                    .user(seeker)
+                    .message("New Job Posted: " + createdJob.getTitle() + " at " + createdJob.getCompany())
+                    .type("JOB_POSTED")
+                    .jobId(createdJob.getId())
+                    .isRead(false)
+                    .build());
+        }
+
+        return ResponseEntity.ok(createdJob);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Job> updateJob(@PathVariable Long id, @RequestBody Job job) {
+    public ResponseEntity<?> updateJob(@PathVariable Long id, @RequestBody Job job, @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body("Unauthorized: Please log in first.");
+        }
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Job existingJob = service.getJobById(id)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+        
+        if (existingJob.getRecruiter() != null && !existingJob.getRecruiter().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("Forbidden: You can only update jobs you posted.");
+        }
+        
         return ResponseEntity.ok(service.updateJob(id, job));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteJob(@PathVariable Long id) {
+    public ResponseEntity<?> deleteJob(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).body("Unauthorized: Please log in first.");
+        }
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        Job existingJob = service.getJobById(id)
+                .orElseThrow(() -> new RuntimeException("Job not found"));
+        
+        if (existingJob.getRecruiter() != null && !existingJob.getRecruiter().getId().equals(user.getId())) {
+            return ResponseEntity.status(403).body("Forbidden: You can only delete jobs you posted.");
+        }
+        
         service.deleteJob(id);
         return ResponseEntity.noContent().build();
     }

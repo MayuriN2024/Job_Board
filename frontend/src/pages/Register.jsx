@@ -27,9 +27,9 @@ const Register = () => {
     }
   }, [isAuthenticated, navigate, from]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = register({ name, email, password, role, location });
+    const result = await register({ name, email, password, role, location });
     if (result.success) {
       navigate(from, { replace: true });
     } else {

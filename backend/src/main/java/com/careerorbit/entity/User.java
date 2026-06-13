@@ -1,9 +1,8 @@
 package com.careerorbit.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
-import java.util.Collection;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -23,10 +22,27 @@ public class User {
     private String email;
 
     @Column(nullable = false)
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
+
+    private String location;
+    
+    private String title;
+
+    private String bio;
+
+    @Column(columnDefinition = "TEXT")
+    private String profilePic;
+
+    private String resumeName;
+
+    @Column(columnDefinition = "TEXT")
+    private String resumeData;
+
+    private String skills; // Stored as comma-separated string (e.g. "Java,React,SQL")
 
     public enum Role {
         ROLE_USER,

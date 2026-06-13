@@ -2,14 +2,12 @@ import React, { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { PlusCircle, Briefcase, MapPin, DollarSign, Tag, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useNotifications } from '../context/NotificationContext';
-import { addVacancy } from '../data/vacancies';
 import { JOB_CATEGORIES } from '../data/jobs';
 import { INDIAN_LOCATIONS } from '../data/locations';
+import api from '../utils/api';
 
 const AddVacancy = () => {
   const { user, isAuthenticated } = useAuth();
-  const { addNotification } = useNotifications();
   const navigate = useNavigate();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -39,7 +37,7 @@ const AddVacancy = () => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
@@ -48,24 +46,19 @@ const AddVacancy = () => {
       return;
     }
 
-    const newVacancy = addVacancy(
-      {
+    try {
+      await api.post('/api/jobs', {
         ...form,
         salaryMin: 0,
         salaryMax: 99,
-      },
-      user.email
-    );
-
-    addNotification({
-      title: `New Job: ${form.title}`,
-      message: `${form.company} is hiring for ${form.title} in ${form.location}`,
-      jobId: newVacancy.id,
-      type: 'job',
-    });
-
-    setSuccess(true);
-    setTimeout(() => navigate('/jobs'), 1500);
+        featured: false,
+        postedDays: 0,
+      });
+      setSuccess(true);
+      setTimeout(() => navigate('/jobs'), 1500);
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data || 'Failed to post vacancy. Please try again.');
+    }
   };
 
   return (

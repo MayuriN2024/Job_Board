@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, MapPin, Briefcase, ArrowRight, Monitor, Palette, BarChart3, Megaphone, TrendingUp, DollarSign } from 'lucide-react';
 import { motion } from 'framer-motion';
 import JobCard from '../components/JobCard';
-import { getFeaturedJobs, JOB_CATEGORIES } from '../data/jobs';
+import { JOB_CATEGORIES } from '../data/jobs';
 import { useAuth } from '../context/AuthContext';
 import LocationSelector from '../components/LocationSelector';
+import api from '../utils/api';
 
 const categoryConfig = {
   Engineering: { icon: Monitor, label: 'Explore open roles' },
@@ -23,7 +24,25 @@ const Home = () => {
   const { isAuthenticated } = useAuth();
   const [searchTitle, setSearchTitle] = useState('');
   const [searchLocation, setSearchLocation] = useState('');
-  const featuredJobs = getFeaturedJobs();
+  const [featuredJobs, setFeaturedJobs] = useState([]);
+
+  useEffect(() => {
+    const fetchFeatured = async () => {
+      try {
+        const res = await api.get('/api/jobs');
+        const jobs = res.data.map((job) => ({
+          ...job,
+          tags: job.tags ? job.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+        }));
+        setFeaturedJobs(jobs.filter((j) => j.featured).slice(0, 6));
+      } catch (err) {
+        // Fallback to static data
+        const { getFeaturedJobs } = await import('../data/jobs');
+        setFeaturedJobs(getFeaturedJobs());
+      }
+    };
+    fetchFeatured();
+  }, []);
 
   // Load recent searches from localStorage
   const [recentSearches, setRecentSearches] = useState(() => {

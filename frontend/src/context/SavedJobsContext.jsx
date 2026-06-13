@@ -1,51 +1,65 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import api from '../utils/api';
 
 const SavedJobsContext = createContext(null);
 
 export const SavedJobsProvider = ({ children }) => {
   const { user } = useAuth();
-  const [savedJobIds, setSavedJobIds] = useState([]);
+  const [savedJobs, setSavedJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Load from localStorage whenever user changes
+  // Derive savedJobIds from savedJobs
+  const savedJobIds = savedJobs.map((job) => job.id);
+
+  // Load saved jobs from backend whenever user changes
   useEffect(() => {
-    if (user) {
-      const STORAGE_KEY = `jobboard_saved_jobs_${user.email}`;
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        setSavedJobIds(stored ? JSON.parse(stored) : []);
-      } catch {
-        setSavedJobIds([]);
+    const fetchSavedJobs = async () => {
+      if (user) {
+        setLoading(true);
+        try {
+          const res = await api.get('/api/saved-jobs');
+          setSavedJobs(res.data);
+        } catch (err) {
+          console.error('Failed to fetch saved jobs', err);
+          setSavedJobs([]);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setSavedJobs([]);
       }
-    } else {
-      setSavedJobIds([]);
-    }
+    };
+    fetchSavedJobs();
   }, [user]);
-
-  // Save to localStorage when savedJobIds changes
-  useEffect(() => {
-    if (user) {
-      const STORAGE_KEY = `jobboard_saved_jobs_${user.email}`;
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(savedJobIds));
-    }
-  }, [savedJobIds, user]);
 
   const isSaved = (jobId) => {
     if (!user) return false;
     return savedJobIds.includes(Number(jobId));
   };
 
-  const toggleSave = (jobId) => {
+  const toggleSave = async (jobId) => {
     if (!user) return false;
     const id = Number(jobId);
-    setSavedJobIds((prev) =>
-      prev.includes(id) ? prev.filter((savedId) => savedId !== id) : [...prev, id]
-    );
-    return true;
+    try {
+      const res = await api.post(`/api/saved-jobs/toggle/${id}`);
+      const nowSaved = res.data; // boolean returned by server
+      if (nowSaved) {
+        // Refetch to get the full job object
+        const savedRes = await api.get('/api/saved-jobs');
+        setSavedJobs(savedRes.data);
+      } else {
+        setSavedJobs((prev) => prev.filter((j) => j.id !== id));
+      }
+      return true;
+    } catch (err) {
+      console.error('Failed to toggle saved job', err);
+      return false;
+    }
   };
 
   return (
-    <SavedJobsContext.Provider value={{ savedJobIds, isSaved, toggleSave }}>
+    <SavedJobsContext.Provider value={{ savedJobs, savedJobIds, isSaved, toggleSave, loading }}>
       {children}
     </SavedJobsContext.Provider>
   );

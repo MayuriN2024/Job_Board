@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { MapPin, Briefcase, Clock, Bookmark, Share2, CheckCircle, ExternalLink } from 'lucide-react';
-import { getJobById } from '../data/jobs';
 import { useSavedJobs } from '../context/SavedJobsContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -9,10 +8,12 @@ import { motion } from 'framer-motion';
 import ShareModal from '../components/ShareModal';
 import ApplyModal from '../components/ApplyModal';
 import CompanyLogo from '../components/CompanyLogo';
+import api from '../utils/api';
 
 const JobDetails = () => {
   const { id } = useParams();
-  const job = getJobById(id);
+  const [job, setJob] = useState(null);
+  const [jobLoading, setJobLoading] = useState(true);
   const { isSaved, toggleSave } = useSavedJobs();
   const { isAuthenticated, hasApplied } = useAuth();
   const { showToast } = useToast();
@@ -22,15 +23,38 @@ const JobDetails = () => {
   const [showShare, setShowShare] = useState(false);
   const [showApply, setShowApply] = useState(false);
 
+  // Fetch job from backend
+  useEffect(() => {
+    const fetchJob = async () => {
+      setJobLoading(true);
+      try {
+        const res = await api.get(`/api/jobs/${id}`);
+        const j = res.data;
+        setJob({
+          ...j,
+          tags: j.tags ? j.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+          responsibilities: j.responsibilities ? j.responsibilities.split('\n').filter(Boolean) : [],
+          requirements: j.requirements ? j.requirements.split('\n').filter(Boolean) : [],
+        });
+      } catch (err) {
+        // Fallback to static data
+        const { getJobById } = await import('../data/jobs');
+        const staticJob = getJobById(id);
+        setJob(staticJob || null);
+      } finally {
+        setJobLoading(false);
+      }
+    };
+    fetchJob();
+  }, [id]);
+
   // Track recently viewed jobs in localStorage
   useEffect(() => {
     if (job) {
       try {
         const stored = localStorage.getItem('jobboard_recently_viewed');
         let list = stored ? JSON.parse(stored) : [];
-        // Remove duplicate
         list = list.filter((savedId) => String(savedId) !== String(job.id));
-        // Push to front and slice to 3
         list.unshift(job.id);
         list = list.slice(0, 3);
         localStorage.setItem('jobboard_recently_viewed', JSON.stringify(list));
@@ -39,6 +63,14 @@ const JobDetails = () => {
       }
     }
   }, [job]);
+
+  if (jobLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--bg-page)' }}>
+        <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!job) {
     return <Navigate to="/jobs" replace />;

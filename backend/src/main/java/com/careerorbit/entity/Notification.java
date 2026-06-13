@@ -5,27 +5,29 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "applications")
+@Table(name = "notifications")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Application {
+public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "job_id", nullable = false)
-    private Job job;
-
-    @Builder.Default
-    private LocalDateTime appliedAt = LocalDateTime.now();
+    private User user; // Recipient
 
     @Column(nullable = false)
-    private String status; // 'Applied', 'Review', 'Interview', 'Offered', 'Rejected'
+    private String message;
+
+    private String type; // "JOB_POSTED", "APPLICATION_STATUS"
+
+    @Builder.Default
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    private boolean isRead;
+
+    private Long jobId;
 }

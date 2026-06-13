@@ -20,11 +20,10 @@ import { useCompare } from './context/CompareContext';
 import { useToast } from './context/ToastContext';
 import { Link } from 'react-router-dom';
 import { X, GitCompareArrows } from 'lucide-react';
-import { getJobById } from './data/jobs';
 
 function App() {
   const { loginSuccess, user } = useAuth();
-  const { compareIds, removeFromCompare, clearCompare, compareCount } = useCompare();
+  const { compareIds, compareJobs, removeFromCompare, clearCompare, compareCount } = useCompare();
   const { showToast } = useToast();
 
   return (
@@ -61,17 +60,16 @@ function App() {
                 {compareCount} job{compareCount > 1 ? 's' : ''} selected
               </span>
               <div className="flex gap-2">
-                {compareIds.map((id) => {
-                  const job = getJobById(id);
+                {compareJobs.map((job) => {
                   if (!job) return null;
                   return (
                     <span
-                      key={id}
+                      key={job.id}
                       className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium shrink-0"
                       style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)' }}
                     >
                       {job.title.length > 20 ? job.title.slice(0, 20) + '…' : job.title}
-                      <button onClick={() => removeFromCompare(id)} className="hover:text-red-400 cursor-pointer">
+                      <button onClick={() => removeFromCompare(job.id)} className="hover:text-red-400 cursor-pointer">
                         <X size={12} />
                       </button>
                     </span>

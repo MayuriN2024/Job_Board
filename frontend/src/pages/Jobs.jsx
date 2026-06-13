@@ -4,8 +4,7 @@ import JobCard from '../components/JobCard';
 import FilterPanel from '../components/FilterPanel';
 import LocationSelector from '../components/LocationSelector';
 import { Search, SlidersHorizontal, X, Inbox, Clock } from 'lucide-react';
-import { JOBS } from '../data/jobs';
-import { getAllJobs } from '../data/vacancies';
+import api from '../utils/api';
 
 
 const RECENT_SEARCHES_KEY = 'jobboard_recent_searches';
@@ -40,7 +39,31 @@ const Jobs = () => {
     }
   });
 
-  const allJobs = useMemo(() => getAllJobs(JOBS), []);
+  const [allJobs, setAllJobs] = useState([]);
+  const [jobsLoading, setJobsLoading] = useState(true);
+
+  // Fetch all jobs from backend
+  useEffect(() => {
+    const fetchJobs = async () => {
+      setJobsLoading(true);
+      try {
+        const res = await api.get('/api/jobs');
+        setAllJobs(res.data.map((job) => ({
+          ...job,
+          tags: job.tags ? job.tags.split(',').map((t) => t.trim()).filter(Boolean) : [],
+        })));
+      } catch (err) {
+        console.error('Failed to fetch jobs from backend', err);
+        // Fallback to static data
+        const { JOBS } = await import('../data/jobs');
+        const { getAllJobs } = await import('../data/vacancies');
+        setAllJobs(getAllJobs(JOBS));
+      } finally {
+        setJobsLoading(false);
+      }
+    };
+    fetchJobs();
+  }, []);
 
   useEffect(() => {
     if (categoryParam) setSelectedCategories([categoryParam]);

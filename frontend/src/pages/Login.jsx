@@ -31,9 +31,9 @@ const Login = () => {
     }
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = login(email, password);
+    const result = await login(email, password);
     if (result.success) {
       if (rememberMe) {
         localStorage.setItem(REMEMBER_EMAIL_KEY, email);

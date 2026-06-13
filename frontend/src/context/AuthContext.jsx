@@ -1,161 +1,207 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import api from '../utils/api';
 
 const AuthContext = createContext(null);
 
 const SESSION_KEY = 'jobboard_session';
-const ACCOUNTS_KEY = 'jobboard_accounts';
-const APPLICATIONS_KEY = 'jobboard_applications';
+const TOKEN_KEY = 'jobboard_token';
 
-const loadSession = () => {
-  try {
-    const stored = localStorage.getItem(SESSION_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
-};
-
-const loadAccounts = () => {
-  try {
-    const stored = localStorage.getItem(ACCOUNTS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
-
-export const loadApplications = () => {
-  try {
-    const stored = localStorage.getItem(APPLICATIONS_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch {
-    return {};
-  }
+const normalizeUser = (apiUser) => {
+  if (!apiUser) return null;
+  return {
+    ...apiUser,
+    role: apiUser.role === 'ROLE_RECRUITER' ? 'recruiter' : 'seeker',
+    skills: apiUser.skills && typeof apiUser.skills === 'string'
+      ? apiUser.skills.split(',').map((s) => s.trim()).filter(Boolean)
+      : (Array.isArray(apiUser.skills) ? apiUser.skills : []),
+  };
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(loadSession);
+  const [user, setUser] = useState(null);
   const [loginSuccess, setLoginSuccess] = useState(false);
-  const [applications, setApplications] = useState(loadApplications);
+  const [applications, setApplications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+  // Initialize session from token / me endpoint
   useEffect(() => {
-    if (user) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(SESSION_KEY);
-    }
+    const initializeSession = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (token) {
+        try {
+          const res = await api.get('/api/users/profile');
+          setUser(normalizeUser(res.data));
+        } catch (err) {
+          console.error('Failed to load user session', err);
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(SESSION_KEY);
+          setUser(null);
+        }
+      }
+      setLoading(false);
+    };
+    initializeSession();
+  }, []);
+
+  // Fetch applications whenever user changes
+  useEffect(() => {
+    const fetchApps = async () => {
+      if (user) {
+        try {
+          if (user.role === 'recruiter') {
+            const res = await api.get('/api/applications/recruiter');
+            setApplications(res.data);
+          } else {
+            const res = await api.get('/api/applications');
+            setApplications(res.data);
+          }
+        } catch (err) {
+          console.error('Failed to fetch applications', err);
+        }
+      } else {
+        setApplications([]);
+      }
+    };
+    fetchApps();
   }, [user]);
 
-  useEffect(() => {
-    localStorage.setItem(APPLICATIONS_KEY, JSON.stringify(applications));
-  }, [applications]);
-
-  const login = (email, password) => {
-    const accounts = loadAccounts();
-    const account = accounts.find((a) => a.email === email && a.password === password);
-    if (account) {
-      localStorage.setItem(SESSION_KEY, JSON.stringify(account));
-      setUser(account);
+  const login = async (email, password) => {
+    try {
+      const res = await api.post('/api/auth/login', { email, password });
+      const { token, user: apiUser } = res.data;
+      
+      localStorage.setItem(TOKEN_KEY, token);
+      const normalized = normalizeUser(apiUser);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(normalized));
+      setUser(normalized);
       setLoginSuccess(true);
       setTimeout(() => setLoginSuccess(false), 4000);
       return { success: true };
-    }
-    return { success: false, error: 'Invalid email or password. Please sign up first.' };
-  };
-
-  const register = ({ name, email, password, role, location }) => {
-    const accounts = loadAccounts();
-    if (accounts.some((a) => a.email === email)) {
-      return { success: false, error: 'An account with this email already exists.' };
-    }
-    const newUser = {
-      name,
-      email,
-      password,
-      role: role || 'seeker',
-      location: location || '',
-      title: role === 'recruiter' ? 'Recruiter' : 'Job Seeker',
-      bio: '',
-      profilePic: '',
-      resumeName: '',
-      resumeData: '',
-      skills: [],
-    };
-    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify([...accounts, newUser]));
-    localStorage.setItem(SESSION_KEY, JSON.stringify(newUser));
-    setUser(newUser);
-    setLoginSuccess(true);
-    setTimeout(() => setLoginSuccess(false), 4000);
-    return { success: true };
-  };
-
-  const updateProfile = (updates) => {
-    setUser((prev) => {
-      if (!prev) return null;
-      const updated = { ...prev, ...updates };
-      const accounts = loadAccounts().map((a) => (a.email === prev.email ? updated : a));
-      localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(accounts));
-      return updated;
-    });
-  };
-
-  const applyToJob = (jobId) => {
-    if (!user) return false;
-    setApplications((prev) => {
-      const userApps = prev[user.email] || [];
-      if (userApps.some((a) => a.jobId === jobId)) return prev;
-      const newApp = {
-        jobId,
-        appliedAt: new Date().toISOString(),
-        status: 'Applied',
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        error: err.response?.data?.error || 'Invalid email or password. Please try again.',
       };
-      return { ...prev, [user.email]: [...userApps, newApp] };
-    });
-    return true;
+    }
+  };
+
+  const register = async ({ name, email, password, role, location }) => {
+    try {
+      const apiRole = role === 'recruiter' ? 'ROLE_RECRUITER' : 'ROLE_USER';
+      const res = await api.post('/api/auth/register', {
+        name,
+        email,
+        password,
+        role: apiRole,
+        location: location || '',
+      });
+      const { token, user: apiUser } = res.data;
+
+      localStorage.setItem(TOKEN_KEY, token);
+      const normalized = normalizeUser(apiUser);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(normalized));
+      setUser(normalized);
+      setLoginSuccess(true);
+      setTimeout(() => setLoginSuccess(false), 4000);
+      return { success: true };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        error: err.response?.data?.error || 'An account with this email already exists.',
+      };
+    }
+  };
+
+  const updateProfile = async (updates) => {
+    try {
+      const apiUpdates = { ...updates };
+      if (updates.skills && Array.isArray(updates.skills)) {
+        apiUpdates.skills = updates.skills.join(',');
+      }
+      
+      const res = await api.put('/api/users/profile', apiUpdates);
+      const normalized = normalizeUser(res.data);
+      localStorage.setItem(SESSION_KEY, JSON.stringify(normalized));
+      setUser(normalized);
+      return { success: true };
+    } catch (err) {
+      console.error(err);
+      return {
+        success: false,
+        error: err.response?.data?.error || 'Failed to update profile.',
+      };
+    }
+  };
+
+  const applyToJob = async (jobId) => {
+    if (!user) return false;
+    try {
+      await api.post(`/api/applications/apply/${jobId}`);
+      // Refresh applications list
+      const res = user.role === 'recruiter'
+        ? await api.get('/api/applications/recruiter')
+        : await api.get('/api/applications');
+      setApplications(res.data);
+      return true;
+    } catch (err) {
+      console.error(err);
+      return false;
+    }
   };
 
   const hasApplied = (jobId) => {
     if (!user) return false;
-    const userApps = applications[user.email] || [];
-    // Support both old format (array of ids) and new format (array of objects)
-    return userApps.some((a) => (typeof a === 'object' ? a.jobId === jobId : a === jobId));
+    return applications.some((a) => (a.job?.id === Number(jobId)));
   };
 
   const getApplicationCount = () => {
     if (!user) return 0;
-    return (applications[user.email] || []).length;
+    return applications.length;
   };
 
   const getApplications = () => {
     if (!user) return [];
-    const userApps = applications[user.email] || [];
-    // Normalize to new format
-    return userApps.map((a) => {
-      if (typeof a === 'object') return a;
-      return { jobId: a, appliedAt: new Date().toISOString(), status: 'Applied' };
-    });
+    return applications.map((a) => ({
+      id: a.id,
+      jobId: a.job?.id,
+      appliedAt: a.appliedAt,
+      status: a.status,
+      job: a.job,
+      seekerName: a.user?.name,
+      seekerEmail: a.user?.email,
+      seekerSkills: a.user?.skills,
+      seekerLocation: a.user?.location,
+      seekerResumeName: a.user?.resumeName,
+      seekerResumeData: a.user?.resumeData,
+    }));
   };
 
-  const updateApplicationStatus = (jobId, status) => {
+  const updateApplicationStatus = async (appId, status) => {
     if (!user) return;
-    setApplications((prev) => {
-      const userApps = (prev[user.email] || []).map((a) => {
-        const id = typeof a === 'object' ? a.jobId : a;
-        if (id === jobId) {
-          return typeof a === 'object' ? { ...a, status } : { jobId: a, appliedAt: new Date().toISOString(), status };
-        }
-        return a;
-      });
-      return { ...prev, [user.email]: userApps };
-    });
+    try {
+      await api.put(`/api/applications/${appId}/status`, { status });
+      // Refresh application list
+      const res = user.role === 'recruiter'
+        ? await api.get('/api/applications/recruiter')
+        : await api.get('/api/applications');
+      setApplications(res.data);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const logout = () => setUser(null);
+  const logout = () => {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(SESSION_KEY);
+    setUser(null);
+  };
 
   return (
     <AuthContext.Provider value={{
       user, login, register, updateProfile, logout,
-      isAuthenticated: !!user, loginSuccess,
+      isAuthenticated: !!user, loginSuccess, loading,
       applyToJob, hasApplied, getApplicationCount,
       getApplications, updateApplicationStatus
     }}>
