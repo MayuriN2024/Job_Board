@@ -13,6 +13,8 @@ import AddVacancy from './pages/AddVacancy';
 import Applications from './pages/Applications';
 import CompareJobs from './pages/CompareJobs';
 import LoginToast from './components/LoginToast';
+import ToastContainer from './components/ToastContainer';
+import ScrollToTop from './components/ScrollToTop';
 import { useAuth } from './context/AuthContext';
 import { useCompare } from './context/CompareContext';
 import { Link } from 'react-router-dom';
@@ -24,9 +26,11 @@ function App() {
   const { compareIds, removeFromCompare, clearCompare, compareCount } = useCompare();
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen relative">
       <Navbar />
+      
       {loginSuccess && user && <LoginToast name={user.name} />}
+      
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -42,6 +46,7 @@ function App() {
           <Route path="/register" element={<Register />} />
         </Routes>
       </main>
+
       <Footer />
 
       {/* Floating Compare Bar */}
@@ -64,7 +69,7 @@ function App() {
                       style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)' }}
                     >
                       {job.title.length > 20 ? job.title.slice(0, 20) + '…' : job.title}
-                      <button onClick={() => removeFromCompare(id)} className="hover:text-red-400">
+                      <button onClick={() => removeFromCompare(id)} className="hover:text-red-400 cursor-pointer">
                         <X size={12} />
                       </button>
                     </span>
@@ -73,12 +78,12 @@ function App() {
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <button onClick={clearCompare} className="text-xs font-medium hover:underline" style={{ color: 'var(--text-muted)' }}>
+              <button onClick={clearCompare} className="text-xs font-medium hover:underline cursor-pointer" style={{ color: 'var(--text-muted)' }}>
                 Clear
               </button>
               <Link
                 to="/compare"
-                className={`btn-primary py-2 px-4 text-sm ${compareCount < 2 ? 'opacity-50 pointer-events-none' : ''}`}
+                className={`btn-primary py-2 px-4 text-sm cursor-pointer ${compareCount < 2 ? 'opacity-50 pointer-events-none' : ''}`}
               >
                 Compare Now
               </Link>
@@ -86,6 +91,12 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Global Toast Container */}
+      <ToastContainer />
+
+      {/* Global Scroll To Top Button */}
+      <ScrollToTop />
     </div>
   );
 }

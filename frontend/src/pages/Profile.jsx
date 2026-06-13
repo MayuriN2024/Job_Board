@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Link, Navigate } from 'react-router-dom';
-import { User, MapPin, Mail, Briefcase, Save, FileText, Camera, Download, Upload, Plus, X, ClipboardList } from 'lucide-react';
+import { User, MapPin, Mail, Briefcase, Save, FileText, Camera, Download, Upload, Plus, X, ClipboardList, PenLine } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { getJobById } from '../data/jobs';
 import { INDIAN_LOCATIONS } from '../data/locations';
@@ -13,6 +13,7 @@ const Profile = () => {
     email: user?.email || '',
     location: user?.location || '',
     bio: user?.bio || '',
+    coverLetter: user?.coverLetter || '',
   });
   const [saved, setSaved] = useState(false);
   const [skillInput, setSkillInput] = useState('');
@@ -109,7 +110,7 @@ const Profile = () => {
 
         <div className="rounded-3xl border shadow-sm overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
           {/* Header with profile pic */}
-          <div className="px-8 py-10 text-white" style={{ background: 'linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)' }}>
+          <div className="px-8 py-10 text-white" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)' }}>
             <div className="flex items-center gap-4">
               <div className="relative group">
                 {user.profilePic ? (
@@ -157,6 +158,7 @@ const Profile = () => {
                       email: user.email,
                       location: user.location || '',
                       bio: user.bio || '',
+                      coverLetter: user.coverLetter || '',
                     });
                     setIsEditing(true);
                   }}
@@ -217,6 +219,18 @@ const Profile = () => {
                     style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-bold mb-1 uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Cover Letter</label>
+                  <textarea
+                    value={form.coverLetter}
+                    onChange={(e) => setForm({ ...form, coverLetter: e.target.value })}
+                    rows={7}
+                    placeholder="Write a general cover letter you can customise for each job application..."
+                    className="w-full px-4 py-3 rounded-xl outline-none focus:ring-2 focus:ring-primary-200 resize-none"
+                    style={{ backgroundColor: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-primary)' }}
+                  />
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>This will be pre-filled when you apply for jobs.</p>
+                </div>
                 <div className="flex gap-3">
                   <button type="submit" className="btn-primary flex items-center gap-2">
                     <Save size={16} /> Save Profile
@@ -258,6 +272,21 @@ const Profile = () => {
                     </p>
                   </div>
                 </div>
+                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ backgroundColor: 'var(--bg-input)' }}>
+                  <PenLine size={18} className="text-primary-500 shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-medium mb-1" style={{ color: 'var(--text-muted)' }}>Cover Letter</p>
+                    {user.coverLetter ? (
+                      <p className="font-medium leading-relaxed text-sm whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>
+                        {user.coverLetter}
+                      </p>
+                    ) : (
+                      <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>
+                        No cover letter yet — click Edit Profile to add one.
+                      </p>
+                    )}
+                  </div>
+                </div>
                 {saved && <p className="text-green-600 text-sm font-medium">Profile updated successfully.</p>}
               </div>
             )}
@@ -271,7 +300,7 @@ const Profile = () => {
                     <span
                       key={skill}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium"
-                      style={{ backgroundColor: 'rgba(147,51,234,0.08)', color: '#9333ea' }}
+                      style={{ backgroundColor: 'rgba(109,40,217,0.08)', color: '#6d28d9' }}
                     >
                       {skill}
                       <button
@@ -404,7 +433,7 @@ const Profile = () => {
                           </div>
                           <span
                             className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                            style={{ backgroundColor: 'rgba(147,51,234,0.08)', color: '#9333ea' }}
+                            style={{ backgroundColor: 'rgba(109,40,217,0.08)', color: '#6d28d9' }}
                           >
                             {app.status}
                           </span>

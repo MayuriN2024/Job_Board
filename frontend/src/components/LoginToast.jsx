@@ -19,7 +19,7 @@ const LoginToast = ({ name }) => {
       <div
         className="flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border"
         style={{
-          background: 'linear-gradient(135deg, #7e22ce 0%, #9333ea 50%, #a855f7 100%)',
+          background: 'linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #5b21b6 100%)',
           borderColor: 'rgba(255,255,255,0.15)',
           color: '#fff',
         }}

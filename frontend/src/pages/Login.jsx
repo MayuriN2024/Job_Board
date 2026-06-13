@@ -46,7 +46,7 @@ const Login = () => {
         style={{ backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
       >
         <div className="text-center mb-10">
-          <div className="inline-flex p-3 rounded-2xl text-white mb-6" style={{ background: 'linear-gradient(135deg, #c4b5fd, #a78bfa)' }}>
+          <div className="inline-flex p-3 rounded-2xl text-white mb-6" style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)' }}>
             <Rocket size={32} />
           </div>
           <h2 className="text-3xl font-extrabold mb-2" style={{ color: 'var(--text-primary)' }}>Welcome Back</h2>

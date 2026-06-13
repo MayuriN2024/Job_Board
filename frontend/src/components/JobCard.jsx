@@ -1,17 +1,32 @@
 import React, { useState } from 'react';
-import { MapPin, Briefcase, Clock, Bookmark, ExternalLink, Share2, GitCompareArrows } from 'lucide-react';
+import { MapPin, Briefcase, Clock, Bookmark, Share2, GitCompareArrows } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSavedJobs } from '../context/SavedJobsContext';
 import { useCompare } from '../context/CompareContext';
+import { useToast } from '../context/ToastContext';
+import { motion } from 'framer-motion';
 import ShareModal from './ShareModal';
+import ApplyModal from './ApplyModal';
 import CompanyLogo from './CompanyLogo';
 
 const JobCard = ({ job }) => {
   const { isSaved, toggleSave } = useSavedJobs();
   const { isComparing, toggleCompare, compareCount } = useCompare();
+  const { showToast } = useToast();
   const saved = isSaved(job.id);
   const comparing = isComparing(job.id);
+  
   const [showShare, setShowShare] = useState(false);
+  const [showApply, setShowApply] = useState(false);
+
+  const handleBookmarkClick = () => {
+    toggleSave(job.id);
+    if (!saved) {
+      showToast('Job added to bookmarks! 📌', 'success');
+    } else {
+      showToast('Job removed from bookmarks.', 'info');
+    }
+  };
 
   return (
     <>
@@ -24,7 +39,7 @@ const JobCard = ({ job }) => {
             <CompanyLogo company={job.company} size="md" applyUrl={job.applyUrl} />
             <div>
               <h3 className="text-lg sm:text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{job.title}</h3>
-              <div className="text-primary-500 font-medium mb-2 sm:mb-3">{job.company}</div>
+              <div className="text-primary-500 font-semibold mb-2 sm:mb-3">{job.company}</div>
 
               <div className="flex flex-wrap gap-y-2 gap-x-4 text-sm" style={{ color: 'var(--text-muted)' }}>
                 <div className="flex items-center gap-1">
@@ -33,7 +48,7 @@ const JobCard = ({ job }) => {
                 <div className="flex items-center gap-1">
                   <Briefcase size={16} /> {job.type}
                 </div>
-                <div className="flex items-center gap-1 font-medium" style={{ color: 'var(--text-secondary)' }}>
+                <div className="flex items-center gap-1 font-semibold" style={{ color: 'var(--text-secondary)' }}>
                   {job.salary}
                 </div>
                 <div className="flex items-center gap-1">
@@ -43,15 +58,15 @@ const JobCard = ({ job }) => {
             </div>
           </div>
 
-          {/* Tags - hidden on small, shown on medium+ */}
+          {/* Pill Tags - hidden on small, shown on medium+ */}
           <div className="hidden sm:flex gap-2 flex-wrap shrink-0">
             {job.tags.slice(0, 3).map((tag, i) => (
               <span
                 key={i}
-                className="tag-badge px-2 py-1 text-xs font-medium rounded-md"
+                className="px-3 py-1 text-xs font-semibold rounded-full"
                 style={{
-                  backgroundColor: 'rgba(147,51,234,0.08)',
-                  color: '#9333ea',
+                  backgroundColor: 'rgba(109,40,217,0.08)',
+                  color: '#6d28d9',
                 }}
               >
                 {tag}
@@ -60,12 +75,12 @@ const JobCard = ({ job }) => {
           </div>
         </div>
 
-        {/* Tags - shown on small, hidden on medium+ */}
+        {/* Pill Tags - shown on mobile, hidden on medium+ */}
         <div className="flex sm:hidden gap-2 flex-wrap">
           {job.tags.slice(0, 3).map((tag, i) => (
             <span
               key={i}
-              className="tag-badge px-2 py-1 text-xs font-medium rounded-md"
+              className="px-3 py-1 text-xs font-semibold rounded-full"
               style={{
                 backgroundColor: 'rgba(147,51,234,0.08)',
                 color: '#9333ea',
@@ -77,11 +92,11 @@ const JobCard = ({ job }) => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Compare */}
           <button
             onClick={() => toggleCompare(job.id)}
-            className={`p-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 ${
+            className={`p-2.5 rounded-xl border transition-all cursor-pointer hover:scale-105 active:scale-95 ${
               comparing ? 'bg-primary-50 border-primary-200 text-primary-600' : ''
             }`}
             style={!comparing ? { backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' } : {}}
@@ -91,24 +106,28 @@ const JobCard = ({ job }) => {
             <GitCompareArrows size={18} />
           </button>
 
-          {/* Save */}
-          <button
-            onClick={() => toggleSave(job.id)}
-            className={`p-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 ${
-              saved
-                ? 'bg-primary-50 border-primary-200 text-primary-600'
-                : ''
+          {/* Bookmark Button with Animation */}
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            onClick={handleBookmarkClick}
+            className={`p-2.5 rounded-xl border transition-colors cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800/40 ${
+              saved ? 'bg-primary-50 border-primary-200 text-primary-600 dark:bg-primary-950/20' : ''
             }`}
             style={!saved ? { backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' } : {}}
             title={saved ? 'Remove from saved' : 'Save job'}
           >
-            <Bookmark size={18} fill={saved ? 'currentColor' : 'none'} />
-          </button>
+            <motion.div
+              animate={saved ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Bookmark size={18} fill={saved ? 'currentColor' : 'none'} />
+            </motion.div>
+          </motion.button>
 
           {/* Share */}
           <button
             onClick={() => setShowShare(true)}
-            className="p-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95"
+            className="p-2.5 rounded-xl border transition-all hover:scale-105 active:scale-95 cursor-pointer"
             style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
             title="Share job"
           >
@@ -117,21 +136,23 @@ const JobCard = ({ job }) => {
 
           <div className="flex-grow" />
 
-          <Link to={`/jobs/${job.id}`} className="btn-secondary py-2 px-4 sm:px-5 text-sm text-center">
+          {/* View Details */}
+          <Link to={`/jobs/${job.id}`} className="btn-secondary py-2.5 px-4 sm:px-5 text-sm text-center cursor-pointer">
             View Details
           </Link>
-          <a
-            href={job.applyUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-primary py-2 px-4 sm:px-5 text-sm flex items-center gap-1"
+
+          {/* Apply Modal Trigger */}
+          <button
+            onClick={() => setShowApply(true)}
+            className="btn-primary py-2.5 px-5 text-sm flex items-center gap-1 cursor-pointer font-bold"
           >
-            Apply <ExternalLink size={14} />
-          </a>
+            Apply Now
+          </button>
         </div>
       </div>
 
       {showShare && <ShareModal job={job} onClose={() => setShowShare(false)} />}
+      {showApply && <ApplyModal job={job} onClose={() => setShowApply(false)} />}
     </>
   );
 };

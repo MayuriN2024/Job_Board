@@ -105,7 +105,7 @@ const ShareModal = ({ job, onClose }) => {
             onClick={copyLink}
             className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
             style={{
-              background: copied ? '#16a34a' : '#9333ea',
+              background: copied ? '#16a34a' : '#6d28d9',
               color: '#fff',
             }}
           >

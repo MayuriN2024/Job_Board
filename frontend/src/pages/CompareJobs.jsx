@@ -109,7 +109,7 @@ const CompareJobs = () => {
                       <td key={job.id} className="px-6 py-4">
                         <span
                           className="text-xs font-bold px-2.5 py-1 rounded-lg"
-                          style={{ backgroundColor: 'rgba(147,51,234,0.08)', color: '#9333ea' }}
+                          style={{ backgroundColor: 'rgba(109,40,217,0.08)', color: '#6d28d9' }}
                         >
                           {job.type}
                         </span>
@@ -173,7 +173,7 @@ const CompareJobs = () => {
                             <span
                               key={i}
                               className="text-xs font-medium px-2 py-1 rounded-md"
-                              style={{ backgroundColor: 'rgba(147,51,234,0.08)', color: '#9333ea' }}
+                              style={{ backgroundColor: 'rgba(109,40,217,0.08)', color: '#6d28d9' }}
                             >
                               {tag}
                             </span>

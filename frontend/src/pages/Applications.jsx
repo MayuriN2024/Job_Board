@@ -7,7 +7,7 @@ import { getJobById } from '../data/jobs';
 const STATUS_OPTIONS = ['All', 'Applied', 'Under Review', 'Interview', 'Offered', 'Rejected'];
 
 const statusColors = {
-  Applied: { bg: 'rgba(147,51,234,0.1)', color: '#9333ea' },
+  Applied: { bg: 'rgba(109,40,217,0.1)', color: '#6d28d9' },
   'Under Review': { bg: 'rgba(234,179,8,0.1)', color: '#ca8a04' },
   Interview: { bg: 'rgba(59,130,246,0.1)', color: '#2563eb' },
   Offered: { bg: 'rgba(34,197,94,0.1)', color: '#16a34a' },

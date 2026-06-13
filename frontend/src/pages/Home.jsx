@@ -4,8 +4,8 @@ import { Search, MapPin, Briefcase, ArrowRight, Monitor, Palette, BarChart3, Meg
 import { motion } from 'framer-motion';
 import JobCard from '../components/JobCard';
 import { getFeaturedJobs, JOB_CATEGORIES } from '../data/jobs';
-import { INDIAN_LOCATIONS } from '../data/locations';
 import { useAuth } from '../context/AuthContext';
+import LocationSelector from '../components/LocationSelector';
 
 const categoryConfig = {
   Engineering: { icon: Monitor, label: 'Explore open roles' },
@@ -16,6 +16,8 @@ const categoryConfig = {
   Finance:     { icon: DollarSign, label: 'Explore open roles' },
 };
 
+const RECENT_SEARCHES_KEY = 'jobboard_recent_searches';
+
 const Home = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -23,8 +25,41 @@ const Home = () => {
   const [searchLocation, setSearchLocation] = useState('');
   const featuredJobs = getFeaturedJobs();
 
+  // Load recent searches from localStorage
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  const saveRecentSearch = (title, location) => {
+    const trimmedTitle = title.trim();
+    const trimmedLoc = location.trim();
+    if (!trimmedTitle && !trimmedLoc) return;
+
+    const newSearch = {
+      title: trimmedTitle,
+      location: trimmedLoc,
+    };
+
+    setRecentSearches((prev) => {
+      // Filter out exact duplicate searches
+      const filtered = prev.filter(
+        (s) => !(s.title.toLowerCase() === newSearch.title.toLowerCase() && 
+                 s.location.toLowerCase() === newSearch.location.toLowerCase())
+      );
+      const updated = [newSearch, ...filtered].slice(0, 5); // Keep last 5
+      localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const handleSearch = (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
+    saveRecentSearch(searchTitle, searchLocation);
     const params = new URLSearchParams();
     if (searchTitle.trim()) params.set('q', searchTitle.trim());
     if (searchLocation) params.set('location', searchLocation);
@@ -63,14 +98,15 @@ const Home = () => {
             {/* Search Bar */}
             <form
               onSubmit={handleSearch}
-              className="max-w-4xl mx-auto p-2 rounded-2xl shadow-xl flex flex-col md:flex-row gap-2"
+              className="max-w-4xl mx-auto p-3 md:p-2 rounded-2xl shadow-xl flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-0"
               style={{
                 backgroundColor: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
               }}
             >
+              {/* Job Title / Keywords */}
               <div
-                className="flex-grow flex items-center px-4 py-3 border-b md:border-b-0 md:border-r"
+                className="flex-grow flex items-center px-4 py-3 border md:border-none rounded-xl md:rounded-none"
                 style={{ borderColor: 'var(--border-color)' }}
               >
                 <Search className="text-neutral-400 mr-3 shrink-0" size={22} />
@@ -83,27 +119,70 @@ const Home = () => {
                   style={{ color: 'var(--text-primary)' }}
                 />
               </div>
+
+              {/* Location Select (Custom Dropdown) */}
               <div
-                className="flex-grow flex items-center px-4 py-3 border-b md:border-b-0 md:border-r"
+                className="flex-grow flex items-center px-4 py-3 border md:border-l md:border-t-none md:border-b-none md:border-r-none rounded-xl md:rounded-none relative text-left"
                 style={{ borderColor: 'var(--border-color)' }}
               >
-                <MapPin className="text-neutral-400 mr-3 shrink-0" size={22} />
-                <select
+                <LocationSelector
                   value={searchLocation}
-                  onChange={(e) => setSearchLocation(e.target.value)}
-                  className="w-full outline-none font-medium bg-transparent cursor-pointer"
-                  style={{ color: 'var(--text-primary)' }}
-                >
-                  <option value="">All India locations</option>
-                  {INDIAN_LOCATIONS.map((loc) => (
-                    <option key={loc} value={loc}>{loc}</option>
-                  ))}
-                </select>
+                  onChange={setSearchLocation}
+                  placeholder="All India locations"
+                />
               </div>
-              <button type="submit" className="btn-primary w-full md:w-auto px-10">
+
+              {/* Search Button */}
+              <button 
+                type="submit" 
+                className="btn-primary w-full md:w-auto px-10 py-3 cursor-pointer shrink-0 rounded-xl md:ml-2"
+              >
                 Browse Jobs
               </button>
             </form>
+
+            {/* Recent Searches History */}
+            {recentSearches.length > 0 && (
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-2 text-sm px-4">
+                <span className="font-semibold" style={{ color: 'var(--text-muted)' }}>
+                  Recent Searches:
+                </span>
+                <div className="flex flex-wrap items-center gap-2">
+                  {recentSearches.map((search, idx) => {
+                    const label = [search.title, search.location].filter(Boolean).join(' in ');
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSearchTitle(search.title);
+                          setSearchLocation(search.location);
+                          // Redirect to job search page immediately with parameters
+                          const params = new URLSearchParams();
+                          if (search.title) params.set('q', search.title);
+                          if (search.location) params.set('location', search.location);
+                          navigate(`/jobs${params.toString() ? `?${params.toString()}` : ''}`);
+                        }}
+                        className="px-3 py-1 text-xs font-semibold rounded-full border transition-all cursor-pointer bg-neutral-100/10 dark:bg-neutral-800/10 hover:border-primary-500 hover:text-primary-500"
+                        style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-color)' }}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecentSearches([]);
+                      localStorage.removeItem(RECENT_SEARCHES_KEY);
+                    }}
+                    className="text-xs font-bold text-red-500 hover:text-red-600 transition-colors ml-1 cursor-pointer"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
@@ -168,7 +247,7 @@ const Home = () => {
       {!isAuthenticated && (
       <section className="py-16 mx-4 sm:mx-8 lg:mx-16 mb-8 rounded-3xl overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #c4b5fd 0%, #a78bfa 50%, #ddd6fe 100%)',
+          background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 50%, #6d28d9 100%)',
         }}
       >
         <div className="max-w-3xl mx-auto px-8 text-center">

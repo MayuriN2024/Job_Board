@@ -1,19 +1,42 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { MapPin, Briefcase, Clock, Bookmark, ExternalLink, Share2, CheckCircle } from 'lucide-react';
+import { MapPin, Briefcase, Clock, Bookmark, Share2, CheckCircle, ExternalLink } from 'lucide-react';
 import { getJobById } from '../data/jobs';
 import { useSavedJobs } from '../context/SavedJobsContext';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import { motion } from 'framer-motion';
 import ShareModal from '../components/ShareModal';
+import ApplyModal from '../components/ApplyModal';
 import CompanyLogo from '../components/CompanyLogo';
 
 const JobDetails = () => {
   const { id } = useParams();
   const job = getJobById(id);
   const { isSaved, toggleSave } = useSavedJobs();
-  const { isAuthenticated, applyToJob, hasApplied } = useAuth();
+  const { isAuthenticated, hasApplied } = useAuth();
+  const { showToast } = useToast();
+  
   const [showShare, setShowShare] = useState(false);
-  const [applyMsg, setApplyMsg] = useState('');
+  const [showApply, setShowApply] = useState(false);
+
+  // Track recently viewed jobs in localStorage
+  useEffect(() => {
+    if (job) {
+      try {
+        const stored = localStorage.getItem('jobboard_recently_viewed');
+        let list = stored ? JSON.parse(stored) : [];
+        // Remove duplicate
+        list = list.filter((savedId) => String(savedId) !== String(job.id));
+        // Push to front and slice to 3
+        list.unshift(job.id);
+        list = list.slice(0, 3);
+        localStorage.setItem('jobboard_recently_viewed', JSON.stringify(list));
+      } catch (e) {
+        console.error('Failed to update recently viewed jobs', e);
+      }
+    }
+  }, [job]);
 
   if (!job) {
     return <Navigate to="/jobs" replace />;
@@ -22,17 +45,12 @@ const JobDetails = () => {
   const saved = isSaved(job.id);
   const applied = hasApplied(job.id);
 
-  const handleApply = (e) => {
-    if (isAuthenticated) {
-      applyToJob(job.id);
-      setApplyMsg('Application tracked! Redirecting to company portal…');
-      setTimeout(() => {
-        window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
-        setApplyMsg('');
-      }, 1200);
+  const handleBookmarkToggle = () => {
+    toggleSave(job.id);
+    if (!saved) {
+      showToast('Job added to bookmarks! 📌', 'success');
     } else {
-      e.preventDefault();
-      window.open(job.applyUrl, '_blank', 'noopener,noreferrer');
+      showToast('Job removed from bookmarks.', 'info');
     }
   };
 
@@ -51,14 +69,14 @@ const JobDetails = () => {
             {/* Main Content */}
             <div className="lg:col-span-2 space-y-8">
               <div
-                className="rounded-3xl p-8 border shadow-sm"
+                className="rounded-3xl p-6 sm:p-8 border shadow-sm"
                 style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
               >
                 <div className="flex items-start justify-between mb-8">
                   <div className="flex gap-6">
                     <CompanyLogo company={job.company} size="lg" applyUrl={job.applyUrl} />
                     <div>
-                      <h1 className="text-3xl font-extrabold mb-2" style={{ color: 'var(--text-primary)' }}>{job.title}</h1>
+                      <h1 className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ color: 'var(--text-primary)' }}>{job.title}</h1>
                       <div className="flex items-center gap-2 text-primary-500 font-bold text-lg">
                         <CompanyLogo company={job.company} size="sm" applyUrl={job.applyUrl} className="!w-7 !h-7 !text-sm !rounded-lg" />
                         {job.company}
@@ -68,24 +86,30 @@ const JobDetails = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowShare(true)}
-                      className="p-3 rounded-xl border transition-all hover:scale-105"
+                      className="p-3 rounded-xl border transition-all hover:scale-105 cursor-pointer"
                       style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
                       title="Share job"
                     >
                       <Share2 size={20} />
                     </button>
-                    <button
-                      onClick={() => toggleSave(job.id)}
-                      className={`p-3 rounded-xl border transition-colors ${
-                        saved
-                          ? 'bg-primary-50 border-primary-200 text-primary-600'
-                          : ''
+                    
+                    {/* Bookmark icon top */}
+                    <motion.button
+                      whileTap={{ scale: 0.9 }}
+                      onClick={handleBookmarkToggle}
+                      className={`p-3 rounded-xl border transition-colors cursor-pointer hover:bg-neutral-100 dark:hover:bg-neutral-800/40 ${
+                        saved ? 'bg-primary-50 border-primary-200 text-primary-600 dark:bg-primary-950/20' : ''
                       }`}
                       style={!saved ? { backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-muted)' } : {}}
                       title={saved ? 'Remove from saved' : 'Save job'}
                     >
-                      <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} />
-                    </button>
+                      <motion.div
+                        animate={saved ? { scale: [1, 1.4, 1] } : { scale: 1 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <Bookmark size={20} fill={saved ? 'currentColor' : 'none'} />
+                      </motion.div>
+                    </motion.button>
                   </div>
                 </div>
 
@@ -96,33 +120,33 @@ const JobDetails = () => {
                 >
                   <div>
                     <div className="text-xs font-bold uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Salary</div>
-                    <div className="font-bold" style={{ color: 'var(--text-primary)' }}>{job.salary}</div>
+                    <div className="font-bold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>{job.salary}</div>
                   </div>
                   <div>
                     <div className="text-xs font-bold uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Type</div>
-                    <div className="font-bold" style={{ color: 'var(--text-primary)' }}>{job.type}</div>
+                    <div className="font-bold text-sm sm:text-base" style={{ color: 'var(--text-primary)' }}>{job.type}</div>
                   </div>
                   <div>
                     <div className="text-xs font-bold uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Location</div>
-                    <div className="font-bold flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
+                    <div className="font-bold text-sm sm:text-base flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
                       <MapPin size={14} /> {job.location}
                     </div>
                   </div>
                   <div>
                     <div className="text-xs font-bold uppercase mb-1" style={{ color: 'var(--text-muted)' }}>Posted</div>
-                    <div className="font-bold flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
+                    <div className="font-bold text-sm sm:text-base flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
                       <Clock size={14} /> {job.postedAt}
                     </div>
                   </div>
                 </div>
 
-                {/* Tags */}
+                {/* Pill Tags */}
                 <div className="flex flex-wrap gap-2 mb-8">
                   {job.tags.map((tag, i) => (
                     <span
                       key={i}
-                      className="px-3 py-1 text-sm font-medium rounded-lg"
-                      style={{ backgroundColor: 'rgba(147,51,234,0.08)', color: '#9333ea' }}
+                      className="px-3 py-1 text-sm font-semibold rounded-full"
+                      style={{ backgroundColor: 'rgba(109,40,217,0.08)', color: '#6d28d9' }}
                     >
                       {tag}
                     </span>
@@ -133,14 +157,14 @@ const JobDetails = () => {
                 <div className="space-y-8">
                   <section>
                     <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Description</h3>
-                    <p className="leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{job.description}</p>
+                    <p className="leading-relaxed text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>{job.description}</p>
                   </section>
 
                   <section>
                     <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Responsibilities</h3>
                     <ul className="space-y-3">
                       {job.responsibilities.map((item, i) => (
-                        <li key={i} className="flex items-start gap-3" style={{ color: 'var(--text-secondary)' }}>
+                        <li key={i} className="flex items-start gap-3 text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                           <div className="w-1.5 h-1.5 rounded-full bg-primary-600 mt-2.5 shrink-0" />
                           {item}
                         </li>
@@ -152,7 +176,7 @@ const JobDetails = () => {
                     <h3 className="text-xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Requirements</h3>
                     <ul className="space-y-3">
                       {job.requirements.map((item, i) => (
-                        <li key={i} className="flex items-start gap-3" style={{ color: 'var(--text-secondary)' }}>
+                        <li key={i} className="flex items-start gap-3 text-sm sm:text-base" style={{ color: 'var(--text-secondary)' }}>
                           <div className="w-1.5 h-1.5 rounded-full bg-primary-600 mt-2.5 shrink-0" />
                           {item}
                         </li>
@@ -166,7 +190,7 @@ const JobDetails = () => {
             {/* Sidebar */}
             <div className="space-y-6">
               <div
-                className="rounded-3xl p-8 border shadow-sm sticky top-28"
+                className="rounded-3xl p-6 sm:p-8 border shadow-sm sticky top-28"
                 style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
               >
                 <div className="flex items-center gap-2 mb-4" style={{ color: 'var(--text-muted)' }}>
@@ -174,7 +198,7 @@ const JobDetails = () => {
                   <span className="font-medium text-sm">Currently hiring</span>
                 </div>
                 <p className="text-sm mb-6 leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-                  Apply directly on {job.company}&apos;s official careers page.
+                  Apply directly through our internal portal. We will process your application immediately.
                 </p>
 
                 {/* Applied status */}
@@ -191,31 +215,20 @@ const JobDetails = () => {
                   </div>
                 )}
 
-                {applyMsg && (
-                  <div
-                    className="flex items-center gap-2 mb-4 px-4 py-3 rounded-xl"
-                    style={{
-                      backgroundColor: 'rgba(147,51,234,0.1)',
-                      border: '1px solid rgba(147,51,234,0.2)',
-                    }}
-                  >
-                    <CheckCircle size={16} className="text-primary-600 shrink-0" />
-                    <span className="text-sm font-semibold" style={{ color: '#9333ea' }}>{applyMsg}</span>
-                  </div>
-                )}
-
+                {/* Apply Button */}
                 <button
-                  onClick={handleApply}
-                  className="w-full btn-primary flex items-center justify-center gap-2 py-4"
+                  onClick={() => setShowApply(true)}
+                  className="w-full btn-primary flex items-center justify-center gap-2 py-4 cursor-pointer font-bold"
                 >
                   {applied ? 'Apply Again' : 'Apply Now'} <ExternalLink size={18} />
                 </button>
 
+                {/* Bookmark Button */}
                 <button
-                  onClick={() => toggleSave(job.id)}
-                  className={`w-full mt-3 py-3 rounded-xl font-bold text-sm border transition-colors flex items-center justify-center gap-2 ${
+                  onClick={handleBookmarkToggle}
+                  className={`w-full mt-3 py-3 rounded-xl font-bold text-sm border transition-colors flex items-center justify-center gap-2 cursor-pointer ${
                     saved
-                      ? 'bg-primary-50 border-primary-200 text-primary-600'
+                      ? 'bg-primary-50 border-primary-200 text-primary-600 dark:bg-primary-950/20'
                       : ''
                   }`}
                   style={!saved ? { backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' } : {}}
@@ -226,7 +239,7 @@ const JobDetails = () => {
 
                 <button
                   onClick={() => setShowShare(true)}
-                  className="w-full mt-3 py-3 rounded-xl font-bold text-sm border transition-colors flex items-center justify-center gap-2 hover:bg-primary-50 hover:border-primary-200 hover:text-primary-600"
+                  className="w-full mt-3 py-3 rounded-xl font-bold text-sm border transition-colors flex items-center justify-center gap-2 cursor-pointer hover:bg-neutral-50 dark:hover:bg-neutral-800/40"
                   style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
                 >
                   <Share2 size={16} />
@@ -235,7 +248,7 @@ const JobDetails = () => {
               </div>
 
               <div
-                className="rounded-3xl p-8 border shadow-sm"
+                className="rounded-3xl p-6 sm:p-8 border shadow-sm"
                 style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
               >
                 <h4 className="font-bold mb-4" style={{ color: 'var(--text-primary)' }}>About {job.company}</h4>
@@ -250,6 +263,7 @@ const JobDetails = () => {
       </div>
 
       {showShare && <ShareModal job={job} onClose={() => setShowShare(false)} />}
+      {showApply && <ApplyModal job={job} onClose={() => setShowApply(false)} />}
     </>
   );
 };

@@ -37,7 +37,7 @@ const Register = () => {
         style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
       >
         <div className="text-center mb-10">
-          <div className="inline-flex p-3 rounded-2xl text-white mb-6" style={{ background: 'linear-gradient(135deg, #c4b5fd, #a78bfa)' }}>
+          <div className="inline-flex p-3 rounded-2xl text-white mb-6" style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)' }}>
             <Rocket size={32} />
           </div>
           <h2 className="text-3xl font-extrabold mb-2" style={{ color: 'var(--text-primary)' }}>Create Account</h2>
@@ -54,14 +54,14 @@ const Register = () => {
                 ? (isDark ? 'rgba(167, 139, 250, 0.15)' : '#f5f3ff') 
                 : 'var(--bg-card)',
               borderColor: role === 'seeker' 
-                ? '#a78bfa' 
+                ? '#7c3aed' 
                 : 'var(--border-color)',
             }}
           >
             <div 
               className="p-2 rounded-lg inline-block mb-3 transition-all"
               style={{
-                backgroundColor: role === 'seeker' ? '#a78bfa' : (isDark ? '#2d1f42' : '#e5e5e5'),
+                backgroundColor: role === 'seeker' ? '#7c3aed' : (isDark ? '#2d1f42' : '#e5e5e5'),
                 color: role === 'seeker' ? '#ffffff' : (isDark ? '#c4b5fd' : '#525252'),
               }}
             >
@@ -80,14 +80,14 @@ const Register = () => {
                 ? (isDark ? 'rgba(167, 139, 250, 0.15)' : '#f5f3ff') 
                 : 'var(--bg-card)',
               borderColor: role === 'recruiter' 
-                ? '#a78bfa' 
+                ? '#7c3aed' 
                 : 'var(--border-color)',
             }}
           >
             <div 
               className="p-2 rounded-lg inline-block mb-3 transition-all"
               style={{
-                backgroundColor: role === 'recruiter' ? '#a78bfa' : (isDark ? '#2d1f42' : '#e5e5e5'),
+                backgroundColor: role === 'recruiter' ? '#7c3aed' : (isDark ? '#2d1f42' : '#e5e5e5'),
                 color: role === 'recruiter' ? '#ffffff' : (isDark ? '#c4b5fd' : '#525252'),
               }}
             >

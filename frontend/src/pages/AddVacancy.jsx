@@ -76,7 +76,7 @@ const AddVacancy = () => {
         </Link>
 
         <div className="rounded-3xl border shadow-sm overflow-hidden" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-          <div className="px-8 py-8 text-white" style={{ background: 'linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%)' }}>
+          <div className="px-8 py-8 text-white" style={{ background: 'linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%)' }}>
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/25 rounded-xl flex items-center justify-center">
                 <PlusCircle size={24} />

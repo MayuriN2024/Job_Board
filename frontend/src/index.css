@@ -3,16 +3,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary-50: #faf5ff;
-  --color-primary-100: #f3e8ff;
-  --color-primary-200: #e9d5ff;
-  --color-primary-300: #d8b4fe;
-  --color-primary-400: #c084fc;
-  --color-primary-500: #a78bfa;
-  --color-primary-600: #a78bfa;
-  --color-primary-700: #8b5cf6;
-  --color-primary-800: #6b21a8;
-  --color-primary-900: #581c87;
+  --color-primary-50: #f5f3ff;
+  --color-primary-100: #ede9fe;
+  --color-primary-200: #ddd6fe;
+  --color-primary-300: #c4b5fd;
+  --color-primary-400: #a78bfa;
+  --color-primary-500: #7c3aed;
+  --color-primary-600: #6d28d9;
+  --color-primary-700: #5b21b6;
+  --color-primary-800: #4c1d95;
+  --color-primary-900: #3b0764;
 
   --color-accent-50: #fdf4ff;
   --color-accent-100: #fae8ff;
@@ -79,17 +79,17 @@ html.dark {
 @layer components {
   .btn-primary {
     @apply px-6 py-3 text-white font-semibold rounded-xl transition-all duration-300 shadow-md active:scale-95;
-    background: linear-gradient(135deg, #c4b5fd 0%, #a78bfa 100%);
+    background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
   }
 
   .btn-primary:hover {
-    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    background: linear-gradient(135deg, #6d28d9 0%, #4c1d95 100%);
   }
   
   .btn-secondary {
     background-color: var(--bg-card);
-    color: #a78bfa;
-    @apply px-6 py-3 font-semibold rounded-xl border border-primary-100 hover:bg-primary-50 transition-all duration-300 active:scale-95;
+    color: #7c3aed;
+    @apply px-6 py-3 font-semibold rounded-xl border border-primary-200 hover:bg-primary-50 transition-all duration-300 active:scale-95;
   }
 
   .card-premium {
@@ -246,7 +246,7 @@ html.dark {
   align-items: center;
   justify-content: center;
   background: rgba(147, 51, 234, 0.08);
-  color: #a78bfa;
+  color: #7c3aed;
   transition: all 0.3s ease;
 }
 
@@ -314,7 +314,7 @@ html.dark input[type='range'] {
 }
 
 html.dark input[type='range']::-webkit-slider-thumb {
-  background: #a78bfa;
+  background: #7c3aed;
 }
 
 /* ── Dark mode tag badges ── */
@@ -422,7 +422,7 @@ html.dark .compare-bar {
   font-size: 0.8rem;
   font-weight: 600;
   background: rgba(167, 139, 250, 0.1);
-  color: #a78bfa;
+  color: #7c3aed;
   transition: all 0.2s;
 }
 

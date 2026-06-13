@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Menu, X, Briefcase, User, LogOut, Bookmark, Sun, Moon, ClipboardList, PlusCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -13,6 +13,7 @@ const Navbar = () => {
   const { isDark, toggleTheme } = useTheme();
   const { compareCount } = useCompare();
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -28,18 +29,57 @@ const Navbar = () => {
 
   const appCount = getApplicationCount();
 
-  const linkClass = `font-medium transition-colors ${isDark ? 'text-purple-200 hover:text-purple-300' : 'text-neutral-600 hover:text-primary-500'}`;
+  // Returns nav link style based on whether it matches the current path
+  const getNavStyle = (path, exact = false) => {
+    const isActive = exact
+      ? location.pathname === path
+      : location.pathname.startsWith(path);
+    return {
+      color: isActive
+        ? '#6d28d9'
+        : isDark
+        ? '#c4b5fd'
+        : '#525252',
+      fontWeight: isActive ? '700' : '500',
+      transition: 'color 0.25s ease, font-weight 0.25s ease',
+    };
+  };
 
   const navLinks = (
     <>
-      <Link to="/" className={linkClass} onClick={() => setIsOpen(false)}>Home</Link>
-      <Link to="/about" className={linkClass} onClick={() => setIsOpen(false)}>About</Link>
-      <Link to="/jobs" className={linkClass} onClick={() => setIsOpen(false)}>Browse Jobs</Link>
-      <Link to="/saved-jobs" className={`${linkClass} flex items-center gap-1`} onClick={() => setIsOpen(false)}>
+      <Link
+        to="/"
+        style={getNavStyle('/', true)}
+        className="transition-colors hover:text-primary-600"
+        onClick={() => setIsOpen(false)}
+      >Home</Link>
+      <Link
+        to="/about"
+        style={getNavStyle('/about')}
+        className="transition-colors hover:text-primary-600"
+        onClick={() => setIsOpen(false)}
+      >About</Link>
+      <Link
+        to="/jobs"
+        style={getNavStyle('/jobs')}
+        className="transition-colors hover:text-primary-600"
+        onClick={() => setIsOpen(false)}
+      >Browse Jobs</Link>
+      <Link
+        to="/saved-jobs"
+        style={getNavStyle('/saved-jobs')}
+        className="flex items-center gap-1 transition-colors hover:text-primary-600"
+        onClick={() => setIsOpen(false)}
+      >
         <Bookmark size={16} /> Saved
       </Link>
       {isAuthenticated && (
-        <Link to="/applications" className={`${linkClass} flex items-center gap-1`} onClick={() => setIsOpen(false)}>
+        <Link
+          to="/applications"
+          style={getNavStyle('/applications')}
+          className="flex items-center gap-1 transition-colors hover:text-primary-600"
+          onClick={() => setIsOpen(false)}
+        >
           <ClipboardList size={16} /> Applications
           {appCount > 0 && (
             <span className="bg-primary-600 text-white text-[10px] font-bold rounded-full px-1.5 py-0.5">
@@ -49,7 +89,12 @@ const Navbar = () => {
         </Link>
       )}
       {isAuthenticated && user?.role === 'recruiter' && (
-        <Link to="/add-vacancy" className={`${linkClass} flex items-center gap-1`} onClick={() => setIsOpen(false)}>
+        <Link
+          to="/add-vacancy"
+          style={getNavStyle('/add-vacancy')}
+          className="flex items-center gap-1 transition-colors hover:text-primary-600"
+          onClick={() => setIsOpen(false)}
+        >
           <PlusCircle size={16} /> Add Vacancy
         </Link>
       )}
@@ -65,7 +110,7 @@ const Navbar = () => {
         <div className="flex justify-between items-center">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="p-2 rounded-lg text-white" style={{ background: 'linear-gradient(135deg, #c4b5fd, #a78bfa)' }}>
+            <div className="p-2 rounded-lg text-white" style={{ background: 'linear-gradient(135deg, #7c3aed, #5b21b6)' }}>
               <Briefcase size={24} />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-primary-500 bg-clip-text text-transparent">
@@ -99,7 +144,7 @@ const Navbar = () => {
               className="p-2 rounded-xl transition-all duration-300 hover:scale-105 active:scale-95"
               style={{
                 backgroundColor: 'var(--bg-card)',
-                color: isDark ? '#c4b5fd' : '#a78bfa',
+                color: isDark ? '#a78bfa' : '#6d28d9',
               }}
               title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
@@ -155,7 +200,7 @@ const Navbar = () => {
               className="p-2 rounded-xl transition-all"
               style={{
                 backgroundColor: 'var(--bg-card)',
-                color: isDark ? '#c4b5fd' : '#a78bfa',
+                color: isDark ? '#a78bfa' : '#6d28d9',
               }}
             >
               {isDark ? <Sun size={18} /> : <Moon size={18} />}

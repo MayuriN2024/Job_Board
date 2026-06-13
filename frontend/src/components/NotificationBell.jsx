@@ -74,7 +74,7 @@ const NotificationBell = () => {
                   className={`notification-item ${!notif.read ? 'unread' : ''}`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: notif.read ? 'transparent' : '#a78bfa' }} />
+                    <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: notif.read ? 'transparent' : '#7c3aed' }} />
                     <div className="flex-grow min-w-0">
                       <p className="font-bold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{notif.title}</p>
                       <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>{notif.message}</p>
