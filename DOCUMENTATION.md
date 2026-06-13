@@ -147,9 +147,9 @@ The workflow defined in `.github/workflows/deploy.yml` acts as the code-quality 
 * **Process**: Spins up a clean Linux runner (`ubuntu-latest`), sets up Node.js 20, installs all dependencies (`npm install --legacy-peer-deps`), and verifies that the React app compiles cleanly (`npm run build`).
 * **Goal**: Guarantees that no broken/uncompilable code gets merged into the repository.
 
-### Continuous Deployment (CD) - Vercel Native Integration
-Deployment is decoupled from GitHub Actions to leverage Vercel's optimized deployment engine:
-* **Automatic Builds**: The project is directly linked to Vercel via the official Vercel-GitHub integration.
-* **Execution**: Upon a push to the `main` branch, Vercel automatically detects the change, runs the production build, and deploys it to the live domain.
-* **Status Updates**: Vercel reports the deployment status check directly back to GitHub commits, showing a green checkmark upon completion.
+### Continuous Deployment (CD) - Vercel Deployment via GitHub Actions
+Continuous deployment is fully automated through the GitHub Actions workflow using the official Vercel action:
+* **Trigger Conditions**: Triggers automatically on every successful push to the `main` branch.
+* **Process**: Following successful build verification, the workflow uses `amondnet/vercel-action@v25` with configured repository secrets (`VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID`) to deploy the compiled frontend directly to Vercel.
+* **Goal**: Automates production release delivery directly from the repository main branch, ensuring only verified code is deployed.
 

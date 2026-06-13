@@ -68,8 +68,8 @@ A modern, production-level career platform for **Job Seekers** and **Recruiters*
 | **Maven** | Build tool |
 
 ### DevOps
-- **CI/CD (GitHub Actions)** — Performs automated frontend build verification on every push and pull request to the `main` branch to ensure compilation correctness.
-- **Deployment (Vercel)** — Frontend is automatically built and deployed to production via Vercel's native GitHub Integration upon push to `main`.
+- **CI/CD & Deployment (GitHub Actions)** — Performs automated frontend build verification on every push and pull request to the `main` branch, and automatically deploys the frontend to Vercel upon pushes to `main`.
+- **Deployment (Vercel)** — Hosted on Vercel, deployed automatically via the GitHub Actions CI/CD pipeline.
 - **Deployment (Render)** — Backend hosting (planned).
 
 ---
