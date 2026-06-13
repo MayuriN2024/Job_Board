@@ -12,6 +12,17 @@ const api = axios.create({
 // Request interceptor to attach JWT token
 api.interceptors.request.use(
   (config) => {
+    // Prevent Mixed Content / Private Network Access prompts on HTTPS production deployments
+    // when VITE_API_URL is not configured (defaults to local HTTP address)
+    if (
+      typeof window !== 'undefined' &&
+      window.location.protocol === 'https:' &&
+      config.baseURL &&
+      (config.baseURL.includes('localhost') || config.baseURL.includes('127.0.0.1'))
+    ) {
+      return Promise.reject(new Error('Blocked local API request on HTTPS to prevent browser Private Network Access warnings.'));
+    }
+
     const token = localStorage.getItem('jobboard_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
